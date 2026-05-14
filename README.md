@@ -1,6 +1,6 @@
 # 基于AI技术的高校师德师风教育管理系统
 
-基于AI技术的高校师德师风教育管理系统 是一个基于 **Spring AI + Vue 3** 的前后端分离项目，主要用于满足新时代教师职业发展需求，提高师德师风教育质量。
+本系统是一个基于 **Spring AI + Vue 3** 的前后端分离项目，主要用于满足新时代教师职业发展需求，提高师德师风教育质量。
 
 ## 项目简介
 
@@ -11,7 +11,6 @@
 - 后端使用 Spring Boot 提供 RESTful API 接口，Spring AI统一封装DeepSeek API
 - 前端使用 Vue 3 构建用户交互界面，Element Plus构建交互组件，提ECharts进行数据可视化展示
 - 数据库使用 MySQL 存储业务数据，结合MyBatis完成数据的持久化和查询
-- 管理端支持课程、教师、学习数据与测评数据管理
 - 教师端包含账户管理、学习筑基、能力提升、治理研修和多维评估模块
 - 管理端提供教师信息管、师德发展总览和分类统计三大功能
 
@@ -46,9 +45,8 @@ Teacher_ethics/
 │   ├── src/
 │   └── pom.xml 
 ├── course-import/           # 课程数据处理脚本
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.js
+│   ├── build_courses.py
+│   └──csv_to_courses_sql.py
 ├── front/                   # 前端 Vue 3 项目
 │   ├── src/
 │   ├── package.json
@@ -90,11 +88,6 @@ mysql -u root -p < schema.sql
 ```
 
 执行后根据提示输入 MySQL 密码即可。
-
-### 数据库配置
-
-后端数据库连接信息需要在本地配置文件中设置。
-
 
 ## 启动后端
 
