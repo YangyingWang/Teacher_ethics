@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.test.quiz.AnswerRecordMapper">
+    <insert id="batchInsert">
+        INSERT INTO answer_records(questionnaire_id, question_id, user_answer, user_score, is_marked, created_at)
+        VALUES
+        <foreach collection="records" item="record" separator=",">
+            (#{record.questionnaireId}, #{record.questionId},
+            #{record.userAnswer, typeHandler=org.apache.ibatis.type.JsonTypeHandler},
+            #{record.userScore}, #{record.isMarked},NOW())
+        </foreach>
+    </insert>
+</mapper>

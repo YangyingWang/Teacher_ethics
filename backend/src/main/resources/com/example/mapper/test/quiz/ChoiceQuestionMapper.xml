@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.test.quiz.ChoiceQuestionMapper">
+    <select id="selectByQuestionIds" resultType="com.example.pojo.test.quiz.ChoiceQuestion">
+        SELECT * FROM choice_questions
+        WHERE question_id IN
+        <foreach collection="questionIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

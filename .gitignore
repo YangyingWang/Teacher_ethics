@@ -1,0 +1,76 @@
+# =====================
+# 不上传的资料文件夹
+# =====================
+毕业论文资料/
+综合实习归档材料/
+course-import/videos
+
+# =====================
+# Java / Spring Boot
+# =====================
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+# Spring Boot sensitive config
+backend/src/main/resources/application.yaml
+!backend/src/main/resources/application-example.yaml
+
+# Maven / Gradle
+.mvn/wrapper/
+.gradle/
+build/
+**/build/
+
+# =====================
+# Node / Vue
+# =====================
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =====================
+# Environment files
+# =====================
+.env
+.env.development
+.env.local
+.env.*.local
+*.local
+
+# =====================
+# IDE files
+# =====================
+.idea/
+.vscode/
+*.iml
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Logs
+# =====================
+logs/
+*.log
+
+# =====================
+# Temporary files
+# =====================
+tmp/
+temp/

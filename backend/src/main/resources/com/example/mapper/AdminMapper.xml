@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.AdminMapper">
+    <select id="countTeachers" resultType="int">
+        SELECT COUNT(*) FROM users u WHERE 1 = 1
+        <if test='username != null and username != ""'>
+            AND u.username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test='realName != null and realName != ""'>
+            AND u.real_name LIKE CONCAT('%', #{realName}, '%')
+        </if>
+        <if test='type != null'>
+            AND u.type = #{type}
+        </if>
+        <if test='depId != null'>
+            AND u.dep_id = #{depId}
+        </if>
+    </select>
+
+    <!-- 分页查询教师列表 -->
+    <select id="pageTeachers" resultType="com.example.vo.AdminTeacherPageVO">
+        SELECT u.id, u.username, u.real_name AS realName, u.sex, u.phone, u.email, u.title,u.type, u.dep_id AS depId,
+        COALESCE(d.name, '未分配院系') AS depName, u.hire_date AS hireDate, u.created_at AS createdAt,
+        (SELECT COUNT(*) FROM assessments a WHERE a.user_id = u.id) AS assessmentCount,
+        (SELECT MAX(a.overall_score) FROM assessments a WHERE a.user_id = u.id) AS latestAssessmentScore,
+        (SELECT COUNT(*) FROM chat_sessions s WHERE s.user_id = u.id) AS simulationCount
+        FROM users u
+        LEFT JOIN departments d ON u.dep_id = d.id
+        WHERE 1 = 1
+        <if test='username != null and username != ""'>
+            AND u.username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test='realName != null and realName != ""'>
+            AND u.real_name LIKE CONCAT('%', #{realName}, '%')
+        </if>
+        <if test='type != null'>
+            AND u.type = #{type}
+        </if>
+        <if test='depId != null'>
+            AND u.dep_id = #{depId}
+        </if>
+        ORDER BY u.created_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据ID查询教师详情 -->
+    <select id="getTeacherDetail" resultType="com.example.vo.AdminTeacherDetailVO">
+        SELECT u.id, u.username, u.real_name AS realName, u.sex, u.phone, u.email, u.title,u.type, u.dep_id AS depId,
+            COALESCE(d.name, '未分配院系') AS depName, u.hire_date AS hireDate, u.created_at AS createdAt, u.expertise, u.bio,
+            (SELECT COUNT(*) FROM assessments a WHERE a.user_id = u.id) AS assessmentCount,
+            (SELECT MAX(a.overall_score) FROM assessments a WHERE a.user_id = u.id) AS latestAssessmentScore,
+            (SELECT COUNT(*) FROM chat_sessions s WHERE s.user_id = u.id) AS simulationCount
+        FROM users u
+                 LEFT JOIN departments d ON u.dep_id = d.id
+        WHERE u.id = #{id}
+    </select>
+
+    <!-- ========== 1. 综合统计摘要 ========== -->
+    <select id="getStatisticsSummary" resultType="com.example.vo.AdminStatisticsSummaryVO">
+        SELECT
+        COUNT(DISTINCT u.id) AS teacherTotal,
+        COALESCE((
+        SELECT COUNT(*)
+        FROM assessments a
+        JOIN users ua ON a.user_id = ua.id
+        <where>
+            <if test="type != null">
+                ua.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND ua.dep_id = #{depId}
+            </if>
+        </where>
+        ), 0) AS assessmentCount,
+        COALESCE((
+        SELECT COUNT(*)
+        FROM chat_sessions cs
+        JOIN users uc ON cs.user_id = uc.id
+        <where>
+            <if test="type != null">
+                uc.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND uc.dep_id = #{depId}
+            </if>
+        </where>
+        ), 0) AS simulationCount,
+        COALESCE(ROUND((
+        SELECT AVG(a.overall_score)
+        FROM assessments a
+        JOIN users ub ON a.user_id = ub.id
+        <where>
+            <if test="type != null">
+                ub.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND ub.dep_id = #{depId}
+            </if>
+        </where>
+        ), 2), 0) AS avgAssessmentScore
+        FROM users u
+        <where>
+            <if test="type != null">
+                u.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND u.dep_id = #{depId}
+            </if>
+        </where>
+    </select>
+
+    <!-- ========== 2. 教师类型统计 ========== -->
+    <select id="getTeacherTypeStatsByDepId" resultType="com.example.vo.NameValueVO">
+        SELECT
+        CASE u.type
+        WHEN 0 THEN '教学型'
+        WHEN 1 THEN '科研型'
+        WHEN 2 THEN '综合型'
+        ELSE '未知类型'
+        END AS name,
+        COUNT(*) AS value
+        FROM users u
+        <where>
+            <if test="depId != null">
+                u.dep_id = #{depId}
+            </if>
+        </where>
+        GROUP BY u.type
+        ORDER BY value DESC
+    </select>
+
+    <!-- ========== 3. 院系教师统计 ========== -->
+    <select id="getDepartmentStatsByType" resultType="com.example.vo.NameValueVO">
+        SELECT
+        COALESCE(d.name, '未分配院系') AS name,
+        COUNT(*) AS value
+        FROM users u
+        LEFT JOIN departments d ON u.dep_id = d.id
+        <where>
+            <if test="type != null">
+                u.type = #{type}
+            </if>
+        </where>
+        GROUP BY u.dep_id, d.name
+        ORDER BY value DESC
+    </select>
+
+    <!-- ========== 4. 评估等级分布统计 ========== -->
+    <select id="getLevelStats" resultType="com.example.vo.NameValueVO">
+        SELECT
+        CASE a.overall_level
+        WHEN 0 THEN '优秀'
+        WHEN 1 THEN '良好'
+        WHEN 2 THEN '合格'
+        WHEN 3 THEN '需改进'
+        ELSE '未知'
+        END AS name,
+        COUNT(*) AS value
+        FROM assessments a
+        JOIN users u ON a.user_id = u.id
+        <where>
+            <if test="type != null">
+                u.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND u.dep_id = #{depId}
+            </if>
+        </where>
+        GROUP BY a.overall_level
+        ORDER BY a.overall_level ASC
+    </select>
+
+    <!-- ========== 5. 评估趋势（近6个月） ========== -->
+    <select id="getAssessmentTrend" resultType="com.example.vo.NameValueVO">
+        SELECT
+        DATE_FORMAT(a.created_at, '%Y-%m') AS name,
+        COUNT(*) AS value
+        FROM assessments a
+        JOIN users u ON a.user_id = u.id
+        <where>
+            a.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            <if test="type != null">
+                AND u.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND u.dep_id = #{depId}
+            </if>
+        </where>
+        GROUP BY DATE_FORMAT(a.created_at, '%Y-%m')
+        ORDER BY name ASC
+    </select>
+
+    <!-- ========== 6. 注册趋势（近6个月） ========== -->
+    <select id="getRegisterTrend" resultType="com.example.vo.NameValueVO">
+        SELECT
+        DATE_FORMAT(u.created_at, '%Y-%m') AS name,
+        COUNT(*) AS value
+        FROM users u
+        <where>
+            u.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            <if test="type != null">
+                AND u.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND u.dep_id = #{depId}
+            </if>
+        </where>
+        GROUP BY DATE_FORMAT(u.created_at, '%Y-%m')
+        ORDER BY name ASC
+    </select>
+
+    <!-- ========== 7. 模拟咨询院系统计 ========== -->
+    <select id="getSimulationStats" resultType="com.example.vo.NameValueVO">
+        SELECT
+        COALESCE(d.name, '未分配院系') AS name,
+        COUNT(cs.id) AS value
+        FROM chat_sessions cs
+        JOIN users u ON cs.user_id = u.id
+        LEFT JOIN departments d ON u.dep_id = d.id
+        <where>
+            <if test="type != null">
+                u.type = #{type}
+            </if>
+            <if test="depId != null">
+                AND u.dep_id = #{depId}
+            </if>
+        </where>
+        GROUP BY u.dep_id, d.name
+        ORDER BY value DESC
+    </select>
+</mapper>

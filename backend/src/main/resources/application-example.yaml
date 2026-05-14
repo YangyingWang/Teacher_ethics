@@ -1,0 +1,36 @@
+server:
+  port: 8081
+
+spring:
+  web:
+    resources:
+      static-locations:
+        - file:///D:/Major/course-import/ #静态资源目录
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/your_db?serverTimezone=GMT%2b8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: your_username
+    password: your_password
+  data:
+    redis:
+      database: 0
+      timeout: 10s
+      repositories:
+        enabled: false
+      password: your_password
+      client-type: jedis
+
+  ai:
+    deepseek:
+      base-url: https://api.deepseek.com
+      api-key: your_api_key
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.5
+
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
